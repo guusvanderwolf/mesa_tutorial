@@ -11,7 +11,9 @@ import seaborn as sns
 import mesa
 
 # Import Cell Agent and OrthogonalMooreGrid
-from mesa.discrete_space import CellAgent, OrthogonalMooreGrid
+from mesa.discrete_space import CellAgent, OrthogonalVonNeumannGrid
+
+import matplotlib.pyplot as plt
 
 # Instantiate MoneyAgent as CellAgent
 class MoneyAgent(CellAgent):
@@ -44,8 +46,8 @@ class MoneyModel(mesa.Model):
         super().__init__(seed=seed)
         self.num_agents = n
         # Instantiate an instance of Moore neighborhood space
-        self.grid = OrthogonalMooreGrid(
-            (width, height), torus=True, capacity=10, random=self.random
+        self.grid = OrthogonalVonNeumannGrid(
+            (width, height), torus=True, capacity=20, random=self.random
         )
 
         # Create agents
@@ -59,3 +61,18 @@ class MoneyModel(mesa.Model):
     def step(self):
         self.agents.shuffle_do("move")
         self.agents.do("give_money")
+
+model = MoneyModel(100, 10, 10)
+for _ in range(50):
+    model.step()
+
+agent_counts = np.zeros((model.grid.width, model.grid.height))
+
+for cell in model.grid.all_cells:
+    agent_counts[cell.coordinate] = len(cell.agents)
+# Plot using seaborn, with a visual size of 5x5
+g = sns.heatmap(agent_counts, cmap="viridis", annot=True, cbar=False, square=True)
+g.figure.set_size_inches(5, 5)
+g.set(title="Number of agents on each cell of the grid")
+
+plt.show()
